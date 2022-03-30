@@ -4,7 +4,8 @@
 
 use futures::future::BoxFuture;
 use serde::{ser::Serializer, Deserialize, Serialize};
-use serde_json::Value as JsonValue;
+// use serde_json::Value as JsonValue;
+use serde_json::value::RawValue as JsonValue;
 use sqlx::{
   error::BoxDynError,
   migrate::{
