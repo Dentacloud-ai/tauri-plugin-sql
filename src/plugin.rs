@@ -324,11 +324,13 @@ impl<R: Runtime> Plugin<R> for TauriSql<R> {
         #[cfg(not(feature = "sqlite"))]
         let fqdb = db.clone();
 
+        #[cfg(not(feature = "mssql"))]
         if !Db::database_exists(&fqdb).await.unwrap_or(false) {
           Db::create_database(&fqdb).await?;
         }
         let pool = Pool::connect(&fqdb).await?;
 
+        #[cfg(not(feature = "mssql"))]
         if let Some(migrations) = self.migrations.as_mut().unwrap().remove(&db) {
           let migrator = Migrator::new(migrations).await?;
           migrator.run(&pool).await?;
