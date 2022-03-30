@@ -30,6 +30,8 @@ type Db = sqlx::sqlite::Sqlite;
 type Db = sqlx::mysql::MySql;
 #[cfg(feature = "postgres")]
 type Db = sqlx::postgres::Postgres;
+#[cfg(feature = "mssql")]
+type Db = sqlx::mssql::Mssql;
 
 #[cfg(feature = "sqlite")]
 type LastInsertId = i64;
@@ -158,11 +160,13 @@ async fn load<R: Runtime>(
   #[cfg(feature = "sqlite")]
   create_dir_all(app_path(&app)).expect("Problem creating App directory!");
 
+  #[cfg(not (feature = "mssql"))]
   if !Db::database_exists(&fqdb).await.unwrap_or(false) {
     Db::create_database(&fqdb).await?;
   }
   let pool = Pool::connect(&fqdb).await?;
 
+  #[cfg(not (feature = "mssql"))]
   if let Some(migrations) = migrations.0.lock().await.remove(&db) {
     let migrator = Migrator::new(migrations).await?;
     migrator.run(&pool).await?;
@@ -196,6 +200,8 @@ async fn execute(
   #[cfg(feature = "mysql")]
   let r = Ok((result.rows_affected(), result.last_insert_id()));
   #[cfg(feature = "postgres")]
+  let r = Ok((result.rows_affected(), 0));
+  #[cfg(feature = "mssql")]
   let r = Ok((result.rows_affected(), 0));
   r
 }
